@@ -109,8 +109,8 @@ func (d *DockerApi) MainGrid() *tview.Grid {
 		SetColumns(-1).
 		SetBorders(true).
 		AddItem(newPrimitive("F1"), 0, 0, 1, 1, 1, 10, false).
-		AddItem(dropdown, 0, 1, 1, 1, 1, 10, false).
-		AddItem(newPrimitive("Header3"), 0, 2, 1, 3, 1, 10, false).
+		AddItem(dropdown, 0, 1, 1, 4, 1, 10, false).
+		// AddItem(newPrimitive("Header3"), 0, 2, 1, 3, 1, 10, false).
 		AddItem(list, 1, 0, 4, 1, 4, 4, true).
 		AddItem(t, 1, 1, 4, 4, 5, 5, false)
 
