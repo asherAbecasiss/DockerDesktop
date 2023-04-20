@@ -2,10 +2,7 @@ module github.com/asher/goDocker
 
 go 1.19
 
-require (
-	github.com/gdamore/tcell/v2 v2.6.0
-	github.com/sirupsen/logrus v1.9.0
-)
+require github.com/gdamore/tcell/v2 v2.6.0
 
 require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect

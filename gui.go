@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/docker/docker/client"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -10,7 +13,16 @@ type DockerApi struct {
 	dockerClient *client.Client
 	app          *tview.Application
 	lastFocus    tview.Primitive
+	grid         *tview.Grid
+	table        *tview.Table
+	dropdown     *tview.DropDown
+	list         *tview.List
+	pages        *tview.Pages
+	box          *tview.Box
+	modal        *tview.Modal
 }
+
+const refreshInterval = 500 * time.Millisecond
 
 func GetApp() *tview.Application {
 
@@ -23,51 +35,67 @@ func GetApp() *tview.Application {
 func (d *DockerApi) RunGui() {
 	d.app = GetApp()
 
-	mainGrid := d.MainGrid()
+	d.grid = d.MainGrid()
+	d.MainNavigation()
+	d.modal = tview.NewModal().
+		SetText("Do you want to quit the application?").
+		AddButtons([]string{"Quit", "Cancel"}).
+		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+			if buttonLabel == "Quit" {
 
-	if err := d.app.SetRoot(mainGrid, true).Run(); err != nil {
+				d.pages.SwitchToPage("main")
+				d.app.SetFocus(d.dropdown)
+			}
+		})
+	d.box = tview.NewBox().
+		SetBorder(true).
+		SetTitle("Centered Box")
+	d.pages = tview.NewPages().
+		AddPage("main", d.grid, true, true).
+		AddPage("modal", d.modal, true, false)
+
+	if err := d.app.SetRoot(d.pages, true).Run(); err != nil {
 		panic(err)
 	}
 
 }
 
 func (d *DockerApi) ContainerTable() *tview.Table {
-	table := tview.NewTable().
+
+	d.table = tview.NewTable().
 		SetBorders(true)
-	// lorem := strings.Split("Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.", " ")
-	// cols, rows := 10, 40
-	// word := 0
+	go func() {
+		for {
+			time.Sleep(refreshInterval)
+			d.app.QueueUpdateDraw(func() {
+				data := d.GetDockerContainer()
+				color := tcell.ColorYellow
+				d.table.SetCell(0, 0, tview.NewTableCell("Name").SetAlign(tview.AlignCenter).SetTextColor(color))
+				d.table.SetCell(0, 1, tview.NewTableCell("Status").SetAlign(tview.AlignCenter).SetTextColor(color))
+				d.table.SetCell(0, 2, tview.NewTableCell("ID").SetAlign(tview.AlignCenter).SetTextColor(color))
 
-	data := d.GetDockerContainer()
-	color := tcell.ColorYellow
-	table.SetCell(0, 0, tview.NewTableCell("Name").SetAlign(tview.AlignCenter).SetTextColor(color))
-	table.SetCell(0, 1, tview.NewTableCell("Status").SetAlign(tview.AlignCenter).SetTextColor(color))
-	table.SetCell(0, 2, tview.NewTableCell("ID").SetAlign(tview.AlignCenter).SetTextColor(color))
+				for i, v := range data {
+					for j := 0; j < 1; j++ {
+						if v.Status[:2] == "Up" {
+							color = tcell.ColorGreenYellow
+						} else {
+							color = tcell.ColorRed
+						}
 
-	color = tcell.ColorWhite
-	for i, v := range data {
-		for j := 0; j < 1; j++ {
+						d.table.SetCell(i+1, j, tview.NewTableCell(v.Names[0]).SetAlign(tview.AlignCenter).SetTextColor(color))
 
-			table.SetCell(i+1, j, tview.NewTableCell(v.Names[0]).SetAlign(tview.AlignCenter).SetTextColor(color))
-			table.SetCell(i+1, j+1, tview.NewTableCell(v.Status).SetAlign(tview.AlignCenter).SetTextColor(color))
-			table.SetCell(i+1, j+2, tview.NewTableCell(v.ID).SetAlign(tview.AlignCenter).SetTextColor(color))
+						d.table.SetCell(i+1, j+1, tview.NewTableCell(v.Status).SetAlign(tview.AlignCenter).SetTextColor(color))
+						d.table.SetCell(i+1, j+2, tview.NewTableCell(v.ID).SetAlign(tview.AlignCenter).SetTextColor(color))
+
+					}
+
+				}
+			})
 
 		}
+	}()
 
-	}
-
-	// table.Select(0, 0).SetFixed(1, 1).SetDoneFunc(func(key tcell.Key) {
-	// 	if key == tcell.KeyEnter {
-	// 		table.SetSelectable(true, false)
-	// 	}
-
-	// }).SetSelectedFunc(func(row int, column int) {
-	// 	table.GetCell(row, column).SetTextColor(tcell.ColorRed)
-	// 	table.SetSelectable(true, false)
-
-	// })
-
-	return table
+	return d.table
 }
 
 func (d *DockerApi) MainGrid() *tview.Grid {
@@ -77,94 +105,137 @@ func (d *DockerApi) MainGrid() *tview.Grid {
 			SetTextAlign(tview.AlignCenter).
 			SetText(text)
 	}
-
+	d.table = d.ContainerTable()
 	// main := newPrimitive("Main content")
-	t := d.ContainerTable()
 
-	list := tview.NewList().
-		AddItem("List item 1", "Some explanatory text", 'a', func() {
+	d.list = tview.NewList().
+		AddItem("Docker", "docker localhost", 'a', func() {
 			d.lastFocus = d.app.GetFocus()
-			d.app.SetFocus(t)
-			t.SetSelectable(true, false)
+			d.app.SetFocus(d.table)
+			d.table.SetSelectable(true, false)
 
 		}).
-		AddItem("List item 2", "Some explanatory text", 'b', func() {
-			r, _ := t.GetSelection()
-			d.RestartContainerID(t.GetCell(r, 2).Text)
+		AddItem("Swarm", "Nodes info", 'b', func() {
+			r, _ := d.table.GetSelection()
+			d.RestartContainerID(d.table.GetCell(r, 2).Text)
 
 		}).
-		AddItem("List item 3", "Some explanatory text", 'c', nil).
+		AddItem("Services", "services Info", 'c', nil).
 		AddItem("List item 4", "Some explanatory text", 'd', nil).
 		AddItem("Quit", "Press to exit", 'q', func() {
 			d.app.Stop()
 
 		})
 
-	dropdown := tview.NewDropDown().
+	d.dropdown = tview.NewDropDown().
 		SetLabel("Select an option: ").
-		SetOptions([]string{"Restart", "Second", "Third", "Fourth", "Fifth"}, nil)
+		SetOptions([]string{"Restart", "Meta", "Third", "Fourth", "Fifth"}, nil)
+	textView := tview.NewTextView().SetLabel(fmt.Sprint(d.table.GetRowCount())).
+		SetDynamicColors(true).
+		SetRegions(true)
+	go func() {
+		for {
+			time.Sleep(refreshInterval)
+			textView.SetLabel(fmt.Sprint(d.table.GetRowCount()) + " Containers")
+		}
+	}()
 
-	grid := tview.NewGrid().
+	d.grid = tview.NewGrid().
 		SetRows(1, -1).
 		SetColumns(-1).
 		SetBorders(true).
-		AddItem(newPrimitive("F1"), 0, 0, 1, 1, 1, 10, false).
-		AddItem(dropdown, 0, 1, 1, 4, 1, 10, false).
-		// AddItem(newPrimitive("Header3"), 0, 2, 1, 3, 1, 10, false).
-		AddItem(list, 1, 0, 4, 1, 4, 4, true).
-		AddItem(t, 1, 1, 4, 4, 5, 5, false)
+		AddItem(newPrimitive("F1"), 0, 0, 1, 1, 1, 1, false).
+		AddItem(d.dropdown, 0, 1, 1, 4, 1, 2, false).
+		AddItem(textView, 1, 1, 1, 4, 0, 2, false).
+		AddItem(d.list, 1, 0, 5, 1, 10, 10, true).
+		AddItem(d.table, 2, 1, 4, 4, 3, 4, false)
 
-	t.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	return d.grid
+
+}
+
+func (d *DockerApi) MainNavigation() {
+
+	d.table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if event.Key() == tcell.KeyEnter {
-			t.SetSelectable(true, false)
+			d.dropdown.SetCurrentOption(-1)
+			d.table.SetSelectable(true, false)
 			d.lastFocus = d.app.GetFocus()
-			r, _ := t.GetSelection()
+			r, _ := d.table.GetSelection()
 
-			d.app.SetFocus(dropdown)
-			dropdown.SetLabel(t.GetCell(r, 0).Text)
-			_, v := dropdown.GetCurrentOption()
-
-			if v == "Restart" {
-				d.RestartContainerID(t.GetCell(r, 2).Text)
-				dropdown.SetCurrentOption(-1)
-				d.app.SetFocus(list)
-			}
+			d.app.SetFocus(d.dropdown)
+			d.dropdown.SetLabel(d.table.GetCell(r, 0).Text)
 
 		}
 		if event.Key() == tcell.KeyESC {
 			if d.lastFocus == nil {
-				d.lastFocus = list
+				d.lastFocus = d.list
 
 			}
+
 			d.app.SetFocus(d.lastFocus)
 		}
 		return event
 	})
-	dropdown.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	d.dropdown.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 
 		if event.Key() == tcell.KeyESC {
 			if d.lastFocus == nil {
-				d.lastFocus = list
+				d.lastFocus = d.table
 
 			}
+			d.dropdown.SetLabel("Select an option: ")
+			d.dropdown.SetCurrentOption(-1)
+
 			d.app.SetFocus(d.lastFocus)
+		}
+		if event.Key() == tcell.KeyEnter {
+
+			i, _ := d.dropdown.GetCurrentOption()
+			r, _ := d.table.GetSelection()
+
+			if i == 0 {
+
+				d.RestartContainerID(d.table.GetCell(r, 2).Text)
+
+				d.dropdown.SetLabel("Select an option: ")
+				d.dropdown.SetCurrentOption(-1)
+				d.app.SetFocus(d.lastFocus)
+
+				return nil
+			}
+			if i == 1 {
+
+				d.dropdown.SetLabel("Select an option: ")
+				d.dropdown.SetCurrentOption(-1)
+				d.pages.ShowPage("modal")
+				d.modal.SetText(d.table.GetCell(r, 2).Text)
+				d.app.SetFocus(d.modal)
+				return nil
+
+			}
+
 		}
 		return event
 	})
+
 	d.app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 
 		if event.Key() == tcell.KeyCtrlA {
 			d.lastFocus = d.app.GetFocus()
-			d.app.SetFocus(dropdown)
+			d.app.SetFocus(d.dropdown)
 
 		}
 		if event.Key() == tcell.KeyF1 {
-			d.app.SetFocus(list)
+			d.app.SetFocus(d.list)
+
+		}
+		if event.Key() == tcell.KeyEscape {
+			d.pages.SwitchToPage("main")
 
 		}
 
 		return event
 	})
-	return grid
 
 }
