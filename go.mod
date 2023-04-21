@@ -6,6 +6,7 @@ require github.com/gdamore/tcell/v2 v2.6.0
 
 require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
+	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
@@ -30,6 +31,7 @@ require (
 )
 
 require (
+	github.com/alecthomas/chroma v0.10.0
 	github.com/docker/docker v23.0.4+incompatible
 	github.com/gdamore/tcell v1.4.0
 	github.com/mattn/go-runewidth v0.0.14 // indirect

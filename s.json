@@ -1,0 +1,134 @@
+[
+  {
+    "Id": "6c7716ff0aa0fef1a027303905e74325a83180fd997789680962d80371c316eb",
+    "Names": ["/some-nginx"],
+    "Image": "nginx",
+    "ImageID": "sha256:6efc10a0510f143a90b69dc564a914574973223e88418d65c1f8809e08dc0a1f",
+    "Command": "/docker-entrypoint.sh nginx -g 'daemon off;'",
+    "Created": 1682006454,
+    "Ports": [{ "PrivatePort": 80, "Type": "tcp" }],
+    "Labels": {
+      "maintainer": "NGINX Docker Maintainers \u003cdocker-maint@nginx.com\u003e"
+    },
+    "State": "running",
+    "Status": "Up 25 seconds",
+    "HostConfig": { "NetworkMode": "default" },
+    "NetworkSettings": {
+      "Networks": {
+        "bridge": {
+          "IPAMConfig": null,
+          "Links": null,
+          "Aliases": null,
+          "NetworkID": "9aca9e7adf6c5ae378d7f48bad0cd144451b5699aabd9d66c60812e087726d12",
+          "EndpointID": "dc3f354d7b63ee3334935f8c6ecf29b1b70fe3a2e0f662f2858d5e02a6d44831",
+          "Gateway": "172.17.0.1",
+          "IPAddress": "172.17.0.2",
+          "IPPrefixLen": 16,
+          "IPv6Gateway": "",
+          "GlobalIPv6Address": "",
+          "GlobalIPv6PrefixLen": 0,
+          "MacAddress": "02:42:ac:11:00:02",
+          "DriverOpts": null
+        }
+      }
+    },
+    "Mounts": [
+      {
+        "Type": "bind",
+        "Source": "/some/content",
+        "Destination": "/usr/share/nginx/html",
+        "Mode": "ro",
+        "RW": false,
+        "Propagation": "rprivate"
+      }
+    ]
+  },
+  {
+    "Id": "7a2efeeff5d22817a8487faedf686d4339a980a7027030353c163409242ee0ce",
+    "Names": ["/jsonserver_minio_1"],
+    "Image": "quay.io/minio/minio:latest",
+    "ImageID": "sha256:8efbd3d7f65fbd7ac75a72e97e94934be61d1dabbdfca71d3daf935cfc51c2ce",
+    "Command": "/usr/bin/docker-entrypoint.sh server /data --console-address :9001",
+    "Created": 1681909837,
+    "Ports": [
+      {
+        "IP": "0.0.0.0",
+        "PrivatePort": 9000,
+        "PublicPort": 9000,
+        "Type": "tcp"
+      },
+      { "IP": "::", "PrivatePort": 9000, "PublicPort": 9000, "Type": "tcp" },
+      {
+        "IP": "0.0.0.0",
+        "PrivatePort": 9001,
+        "PublicPort": 9001,
+        "Type": "tcp"
+      },
+      { "IP": "::", "PrivatePort": 9001, "PublicPort": 9001, "Type": "tcp" }
+    ],
+    "Labels": {
+      "architecture": "x86_64",
+      "build-date": "2023-03-28T04:02:11",
+      "com.docker.compose.config-hash": "f73a2edb2b4413636fd304a49a988dfd7b416402745c4b1462e2b2a18887e9ea",
+      "com.docker.compose.container-number": "1",
+      "com.docker.compose.oneoff": "False",
+      "com.docker.compose.project": "jsonserver",
+      "com.docker.compose.project.config_files": "docker-compose.yml",
+      "com.docker.compose.project.working_dir": "/home/asher/GolandProjects/jsonServer",
+      "com.docker.compose.service": "minio",
+      "com.docker.compose.version": "1.29.2",
+      "com.redhat.component": "ubi8-minimal-container",
+      "com.redhat.license_terms": "https://www.redhat.com/en/about/red-hat-end-user-license-agreements#UBI",
+      "description": "MinIO object storage is fundamentally different. Designed for performance and the S3 API, it is 100% open-source. MinIO is ideal for large, private cloud environments with stringent security requirements and delivers mission-critical availability across a diverse range of workloads.",
+      "distribution-scope": "public",
+      "io.buildah.version": "1.27.3",
+      "io.k8s.description": "The Universal Base Image Minimal is a stripped down image that uses microdnf as a package manager. This base image is freely redistributable, but Red Hat only supports Red Hat technologies through subscriptions for Red Hat products. This image is maintained by Red Hat and updated regularly.",
+      "io.k8s.display-name": "Red Hat Universal Base Image 8 Minimal",
+      "io.openshift.expose-services": "",
+      "io.openshift.tags": "minimal rhel8",
+      "maintainer": "MinIO Inc \u003cdev@min.io\u003e",
+      "name": "MinIO",
+      "release": "RELEASE.2023-04-13T03-08-07Z",
+      "summary": "MinIO is a High Performance Object Storage, API compatible with Amazon S3 cloud storage service.",
+      "url": "https://access.redhat.com/containers/#/registry.access.redhat.com/ubi8-minimal/images/8.7-1107",
+      "vcs-ref": "146fdafc2595e26f5f9c1b9a2b3f36bbca8237e4",
+      "vcs-type": "git",
+      "vendor": "MinIO Inc \u003cdev@min.io\u003e",
+      "version": "RELEASE.2023-04-13T03-08-07Z"
+    },
+    "State": "running",
+    "Status": "Up 20 minutes",
+    "HostConfig": { "NetworkMode": "jsonserver_default" },
+    "NetworkSettings": {
+      "Networks": {
+        "jsonserver_default": {
+          "IPAMConfig": null,
+          "Links": null,
+          "Aliases": null,
+          "NetworkID": "4d813d7482296d96e231080fbda3f25013f9bdb93b34f98cf107496c7e56ea31",
+          "EndpointID": "1ee880a6dc321cb9d8a66a5fb485cd543d1427b2fe6e7928371feb27407095fe",
+          "Gateway": "172.18.0.1",
+          "IPAddress": "172.18.0.2",
+          "IPPrefixLen": 16,
+          "IPv6Gateway": "",
+          "GlobalIPv6Address": "",
+          "GlobalIPv6PrefixLen": 0,
+          "MacAddress": "02:42:ac:12:00:02",
+          "DriverOpts": null
+        }
+      }
+    },
+    "Mounts": [
+      {
+        "Type": "volume",
+        "Name": "89a5ab2150a6f8d4681a961507f3dfc6361ce213079d39c69f50283f375c46d0",
+        "Source": "",
+        "Destination": "/data",
+        "Driver": "local",
+        "Mode": "",
+        "RW": true,
+        "Propagation": ""
+      }
+    ]
+  }
+]
