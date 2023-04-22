@@ -22,7 +22,7 @@ func (d *DockerApi) SwarmTable() *tview.Table {
 
 				color := tcell.ColorYellow
 				d.swarmTable.SetCell(0, 0, tview.NewTableCell("Name").SetAlign(tview.AlignCenter).SetTextColor(color))
-				d.swarmTable.SetCell(0, 1, tview.NewTableCell("Status").SetAlign(tview.AlignCenter).SetTextColor(color))
+				d.swarmTable.SetCell(0, 1, tview.NewTableCell("Image").SetAlign(tview.AlignCenter).SetTextColor(color))
 				d.swarmTable.SetCell(0, 2, tview.NewTableCell("ID").SetAlign(tview.AlignCenter).SetTextColor(color))
 
 				for i, v := range d.swarmData {
@@ -35,7 +35,7 @@ func (d *DockerApi) SwarmTable() *tview.Table {
 
 						d.swarmTable.SetCell(i+1, j, tview.NewTableCell(v.Spec.Name).SetAlign(tview.AlignCenter).SetTextColor(color))
 
-						d.swarmTable.SetCell(i+1, j+1, tview.NewTableCell(v.Meta.Version.String()).SetAlign(tview.AlignCenter).SetTextColor(color))
+						d.swarmTable.SetCell(i+1, j+1, tview.NewTableCell(v.Spec.TaskTemplate.ContainerSpec.Image).SetAlign(tview.AlignCenter).SetTextColor(color))
 						d.swarmTable.SetCell(i+1, j+2, tview.NewTableCell(v.ID).SetAlign(tview.AlignCenter).SetTextColor(color))
 
 					}

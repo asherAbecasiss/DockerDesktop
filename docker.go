@@ -11,7 +11,10 @@ import (
 )
 
 func (d *DockerApi) GetDockerContainer() []types.Container {
-	containers, err := d.dockerClient.ContainerList(context.Background(), types.ContainerListOptions{})
+
+	
+
+	containers, err := d.dockerClient.ContainerList(context.Background(), types.ContainerListOptions{All: true})
 	if err != nil {
 		panic(err)
 	}
@@ -27,6 +30,71 @@ func (d *DockerApi) GetDockerContainer() []types.Container {
 	// f.Close()
 
 	return containers
+}
+
+type ImageTag struct {
+	RepoTags    string
+	RepoDigests string
+	Id          string
+}
+
+func (d *DockerApi) GetImageListDocker() []ImageTag {
+
+	res, err := d.dockerClient.ImageList(context.Background(), types.ImageListOptions{All: true})
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	var image []ImageTag
+	for _, v := range res {
+
+		for x, y := range v.RepoDigests {
+			k := ImageTag{
+				RepoDigests: y,
+				RepoTags:    v.RepoTags[x],
+				Id:          v.ID,
+			}
+			image = append(image, k)
+		}
+
+	}
+
+	return image
+
+}
+func (d *DockerApi) StopContainerById(id string) {
+
+	var p *int
+	var z = 0
+	p = &z
+	err := d.dockerClient.ContainerStop(context.Background(), id, container.StopOptions{Timeout: p})
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+}
+func (d *DockerApi) StartContainerById(id string) {
+
+	err := d.dockerClient.ContainerStart(context.Background(), id, types.ContainerStartOptions{})
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+}
+
+func (d *DockerApi) RemoveImageByID(id string) {
+
+	d.StopContainerById(id)
+
+	_, err := d.dockerClient.ImageRemove(context.Background(), id, types.ImageRemoveOptions{Force: true})
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
 }
 
 func (d *DockerApi) RestartContainerID(id string) {
@@ -52,11 +120,6 @@ func (d *DockerApi) ContainerInspectId(id string) types.ContainerJSON {
 	return res
 
 }
-
-
-
-
-
 
 //Swarm
 

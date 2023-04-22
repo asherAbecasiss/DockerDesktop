@@ -15,6 +15,8 @@ func (d *DockerApi) MainNavigation() {
 	d.SwarmNavigation()
 	d.ContainearTableNavigation()
 	d.DropDownNavigation()
+	d.ImageListTableNavigation()
+	d.DropDownImageListNavigation()
 
 	d.text.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 
@@ -36,10 +38,10 @@ func (d *DockerApi) MainNavigation() {
 			d.app.SetFocus(d.dropdown)
 
 		}
-		if event.Key() == tcell.KeyF1 {
-			d.app.SetFocus(d.list)
+		// if event.Key() == tcell.KeyF1 {
+		// 	d.app.SetFocus(d.list)
 
-		}
+		// }
 		// if event.Key() == tcell.KeyEscape {
 		// 	// d.pagesTabel.ShowPage("main1")
 		// 	d.lastFocus = d.app.GetFocus()
@@ -96,6 +98,43 @@ func (d *DockerApi) ContainearTableNavigation() {
 			d.app.SetFocus(d.list)
 			return nil
 		}
+		if event.Key() == tcell.KeyF1 {
+			d.containearTable.Clear()
+			*d.filters = 1
+
+			return nil
+		}
+		if event.Key() == tcell.KeyF2 {
+			d.containearTable.Clear()
+			*d.filters = 2
+
+			return nil
+		}
+
+		return event
+	})
+}
+
+func (d *DockerApi) ImageListTableNavigation() {
+	d.containearTableImage.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyEnter {
+			d.dropdownImageList.SetCurrentOption(-1)
+			d.containearTableImage.SetSelectable(true, false)
+			d.lastFocus = d.app.GetFocus()
+			r, _ := d.containearTableImage.GetSelection()
+
+			d.app.SetFocus(d.dropdownImageList)
+			d.dropdownImageList.SetLabel(d.containearTableImage.GetCell(r, 0).Text)
+			return nil
+
+		}
+		if event.Key() == tcell.KeyESC {
+			d.lastFocus = d.app.GetFocus()
+
+			d.pagesMain.SwitchToPage("mainPage")
+			d.app.SetFocus(d.list)
+			return nil
+		}
 		return event
 	})
 }
@@ -111,8 +150,8 @@ func (d *DockerApi) DropDownNavigation() {
 			d.dropdown.SetLabel("Select an option: ")
 			d.dropdown.SetCurrentOption(-1)
 			d.pagesMain.HidePage("containerLogInfoPage")
-			d.lastFocus = d.containearTable
-			d.app.SetFocus(d.containearTable)
+			// d.lastFocus = d.containearTable
+			d.app.SetFocus(d.lastFocus)
 
 			return nil
 
@@ -222,6 +261,69 @@ func (d *DockerApi) DropDownNavigation() {
 				io.Copy(buf, r)
 				r.Close()
 				fmt.Fprintf(d.text, "%s", buf.String())
+				return nil
+			}
+			if i == 3 {
+
+				d.StopContainerById(d.containearTable.GetCell(r, 2).Text)
+
+				d.dropdown.SetLabel("Select an option: ")
+				d.dropdown.SetCurrentOption(-1)
+				d.containearTable.Clear()
+				d.app.SetFocus(d.lastFocus)
+
+				return nil
+
+			}
+			if i == 4 {
+
+				d.StartContainerById(d.containearTable.GetCell(r, 2).Text)
+
+				d.dropdown.SetLabel("Select an option: ")
+				d.dropdown.SetCurrentOption(-1)
+				d.containearTable.Clear()
+				d.app.SetFocus(d.lastFocus)
+
+				return nil
+
+			}
+
+		}
+		return event
+	})
+
+}
+
+func (d *DockerApi) DropDownImageListNavigation() {
+	d.dropdownImageList.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+
+		if event.Key() == tcell.KeyESC {
+			// if d.lastFocus == nil {
+			// 	d.lastFocus = d.list
+
+			// }
+			d.dropdownImageList.SetLabel("Select an option: ")
+			d.dropdownImageList.SetCurrentOption(-1)
+			d.pagesMain.HidePage("containerLogInfoPage")
+			// d.lastFocus = d.containearTable
+			d.app.SetFocus(d.lastFocus)
+
+			return nil
+
+		}
+		if event.Key() == tcell.KeyEnter {
+
+			i, _ := d.dropdownImageList.GetCurrentOption()
+			r, _ := d.containearTableImage.GetSelection()
+			// d.lastFocus = d.app.GetFocus()
+			if i == 0 {
+
+				d.RemoveImageByID(d.containearTableImage.GetCell(r, 2).Text)
+
+				d.dropdownImageList.SetLabel("Select an option: ")
+				d.dropdownImageList.SetCurrentOption(-1)
+				d.app.SetFocus(d.lastFocus)
+
 				return nil
 			}
 
