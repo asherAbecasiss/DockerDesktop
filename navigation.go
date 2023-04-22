@@ -12,36 +12,95 @@ import (
 
 func (d *DockerApi) MainNavigation() {
 
-	d.table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Key() == tcell.KeyEnter {
-			d.dropdown.SetCurrentOption(-1)
-			d.table.SetSelectable(true, false)
-			d.lastFocus = d.app.GetFocus()
-			r, _ := d.table.GetSelection()
+	d.SwarmNavigation()
+	d.ContainearTableNavigation()
+	d.DropDownNavigation()
 
-			d.app.SetFocus(d.dropdown)
-			d.dropdown.SetLabel(d.table.GetCell(r, 0).Text)
-
-		}
-		if event.Key() == tcell.KeyESC {
-			d.lastFocus = d.app.GetFocus()
-			
-			d.pagesMain.SwitchToPage("mainPage")
-			d.app.SetFocus(d.list)
-			return event
-		}
-		return event
-	})
 	d.text.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 
 		if event.Key() == tcell.KeyESC {
-
-			d.pagesTabel.SwitchToPage("containerTablePage")
-			d.app.SetFocus(d.table)
+			d.pagesMain.HidePage("containerLogInfoPage")
+			d.pagesMain.ShowPage("dockerPage")
+			d.lastFocus = d.app.GetFocus()
+			d.app.SetFocus(d.containearTable)
+			return nil
 
 		}
 		return event
 	})
+
+	d.app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+
+		if event.Key() == tcell.KeyCtrlA {
+			d.lastFocus = d.app.GetFocus()
+			d.app.SetFocus(d.dropdown)
+
+		}
+		if event.Key() == tcell.KeyF1 {
+			d.app.SetFocus(d.list)
+
+		}
+		// if event.Key() == tcell.KeyEscape {
+		// 	// d.pagesTabel.ShowPage("main1")
+		// 	d.lastFocus = d.app.GetFocus()
+		// 	d.app.SetFocus(d.lastFocus)
+
+		// }
+
+		return event
+	})
+
+}
+
+func (d *DockerApi) SwarmNavigation() {
+	d.swarmTable.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyEnter {
+			d.dropdown.SetCurrentOption(-1)
+			d.swarmTable.SetSelectable(true, false)
+			d.lastFocus = d.app.GetFocus()
+			r, _ := d.swarmTable.GetSelection()
+
+			d.app.SetFocus(d.dropdown)
+			d.dropdown.SetLabel(d.swarmTable.GetCell(r, 0).Text)
+			return nil
+
+		}
+		if event.Key() == tcell.KeyESC {
+			d.lastFocus = d.app.GetFocus()
+
+			d.pagesMain.SwitchToPage("mainPage")
+			d.app.SetFocus(d.list)
+			return nil
+		}
+		return event
+	})
+}
+
+func (d *DockerApi) ContainearTableNavigation() {
+	d.containearTable.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyEnter {
+			d.dropdown.SetCurrentOption(-1)
+			d.containearTable.SetSelectable(true, false)
+			d.lastFocus = d.app.GetFocus()
+			r, _ := d.containearTable.GetSelection()
+
+			d.app.SetFocus(d.dropdown)
+			d.dropdown.SetLabel(d.containearTable.GetCell(r, 0).Text)
+			return nil
+
+		}
+		if event.Key() == tcell.KeyESC {
+			d.lastFocus = d.app.GetFocus()
+
+			d.pagesMain.SwitchToPage("mainPage")
+			d.app.SetFocus(d.list)
+			return nil
+		}
+		return event
+	})
+}
+
+func (d *DockerApi) DropDownNavigation() {
 	d.dropdown.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 
 		if event.Key() == tcell.KeyESC {
@@ -51,18 +110,21 @@ func (d *DockerApi) MainNavigation() {
 			// }
 			d.dropdown.SetLabel("Select an option: ")
 			d.dropdown.SetCurrentOption(-1)
-			d.pagesTabel.ShowPage("containerTablePage")
-			d.lastFocus = d.table
-			d.app.SetFocus(d.table)
+			d.pagesMain.HidePage("containerLogInfoPage")
+			d.lastFocus = d.containearTable
+			d.app.SetFocus(d.containearTable)
+
+			return nil
+
 		}
 		if event.Key() == tcell.KeyEnter {
 
 			i, _ := d.dropdown.GetCurrentOption()
-			r, _ := d.table.GetSelection()
-			d.lastFocus = d.app.GetFocus()
+			r, _ := d.containearTable.GetSelection()
+			// d.lastFocus = d.app.GetFocus()
 			if i == 0 {
 
-				d.RestartContainerID(d.table.GetCell(r, 2).Text)
+				d.RestartContainerID(d.containearTable.GetCell(r, 2).Text)
 
 				d.dropdown.SetLabel("Select an option: ")
 				d.dropdown.SetCurrentOption(-1)
@@ -73,14 +135,17 @@ func (d *DockerApi) MainNavigation() {
 			if i == 1 {
 				d.text.Clear()
 
-				d.dropdown.SetLabel("Select an option: ")
+				d.dropdown.SetLabel("Select an option2: ")
 				d.dropdown.SetCurrentOption(-1)
-				d.pagesTabel.ShowPage("containerLogInfoPage")
+				d.pagesMain.HidePage("dockerPage")
+				d.pagesMain.ShowPage("containerLogInfoPage")
 
 				d.app.SetFocus(d.text)
-				res := d.ContainerInspectId(d.table.GetCell(r, 2).Text)
+
+				d.lastFocus = d.app.GetFocus()
+				res := d.ContainerInspectId(d.containearTable.GetCell(r, 2).Text)
 				d.text.SetBorder(true).
-					SetTitle("Meta Data for " + d.table.GetCell(r, 0).Text).
+					SetTitle("Meta Data for " + d.containearTable.GetCell(r, 0).Text).
 					SetTitleColor(tcell.ColorAqua).
 					SetBorderColor(tcell.ColorAqua)
 				if res.State.Running {
@@ -130,6 +195,7 @@ func (d *DockerApi) MainNavigation() {
 				for _, v := range res.Config.Env {
 					fmt.Fprintln(d.text, v)
 				}
+
 				return nil
 
 			}
@@ -139,13 +205,14 @@ func (d *DockerApi) MainNavigation() {
 
 				d.dropdown.SetLabel("Select an option: ")
 				d.dropdown.SetCurrentOption(-1)
-				d.pagesTabel.ShowPage("containerLogInfoPage")
+				d.pagesMain.HidePage("dockerPage")
+				d.pagesMain.ShowPage("containerLogInfoPage")
 				d.app.SetFocus(d.text)
 				d.text.SetBorder(true).
-					SetTitle("Logs for " + d.table.GetCell(r, 0).Text).
+					SetTitle("Logs for " + d.containearTable.GetCell(r, 0).Text).
 					SetTitleColor(tcell.ColorAqua).
 					SetBorderColor(tcell.ColorAqua)
-				r, err := d.dockerClient.ContainerLogs(context.Background(), d.table.GetCell(r, 2).Text, types.ContainerLogsOptions{ShowStdout: true, Tail: "200"})
+				r, err := d.dockerClient.ContainerLogs(context.Background(), d.containearTable.GetCell(r, 2).Text, types.ContainerLogsOptions{ShowStdout: true, Tail: "200"})
 
 				if err != nil {
 					panic(err)
@@ -159,27 +226,6 @@ func (d *DockerApi) MainNavigation() {
 			}
 
 		}
-		return event
-	})
-
-	d.app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-
-		if event.Key() == tcell.KeyCtrlA {
-			d.lastFocus = d.app.GetFocus()
-			d.app.SetFocus(d.dropdown)
-
-		}
-		if event.Key() == tcell.KeyF1 {
-			d.app.SetFocus(d.list)
-
-		}
-		if event.Key() == tcell.KeyEscape {
-			// d.pagesTabel.ShowPage("main1")
-			d.lastFocus = d.app.GetFocus()
-			d.app.SetFocus(d.lastFocus)
-
-		}
-
 		return event
 	})
 

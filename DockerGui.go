@@ -9,7 +9,7 @@ import (
 
 func (d *DockerApi) ContainerTable() *tview.Table {
 
-	d.table = tview.NewTable().
+	d.containearTable = tview.NewTable().
 		SetBorders(true)
 	go func() {
 		for {
@@ -17,9 +17,9 @@ func (d *DockerApi) ContainerTable() *tview.Table {
 			d.app.QueueUpdateDraw(func() {
 				d.containerData = d.GetDockerContainer()
 				color := tcell.ColorYellow
-				d.table.SetCell(0, 0, tview.NewTableCell("Name").SetAlign(tview.AlignCenter).SetTextColor(color))
-				d.table.SetCell(0, 1, tview.NewTableCell("Status").SetAlign(tview.AlignCenter).SetTextColor(color))
-				d.table.SetCell(0, 2, tview.NewTableCell("ID").SetAlign(tview.AlignCenter).SetTextColor(color))
+				d.containearTable.SetCell(0, 0, tview.NewTableCell("Name").SetAlign(tview.AlignCenter).SetTextColor(color))
+				d.containearTable.SetCell(0, 1, tview.NewTableCell("Status").SetAlign(tview.AlignCenter).SetTextColor(color))
+				d.containearTable.SetCell(0, 2, tview.NewTableCell("ID").SetAlign(tview.AlignCenter).SetTextColor(color))
 
 				for i, v := range d.containerData {
 					for j := 0; j < 1; j++ {
@@ -29,10 +29,10 @@ func (d *DockerApi) ContainerTable() *tview.Table {
 							color = tcell.ColorRed
 						}
 
-						d.table.SetCell(i+1, j, tview.NewTableCell(v.Names[0]).SetAlign(tview.AlignCenter).SetTextColor(color))
+						d.containearTable.SetCell(i+1, j, tview.NewTableCell(v.Names[0]).SetAlign(tview.AlignCenter).SetTextColor(color))
 
-						d.table.SetCell(i+1, j+1, tview.NewTableCell(v.Status).SetAlign(tview.AlignCenter).SetTextColor(color))
-						d.table.SetCell(i+1, j+2, tview.NewTableCell(v.ID).SetAlign(tview.AlignCenter).SetTextColor(color))
+						d.containearTable.SetCell(i+1, j+1, tview.NewTableCell(v.Status).SetAlign(tview.AlignCenter).SetTextColor(color))
+						d.containearTable.SetCell(i+1, j+2, tview.NewTableCell(v.ID).SetAlign(tview.AlignCenter).SetTextColor(color))
 
 					}
 
@@ -42,5 +42,5 @@ func (d *DockerApi) ContainerTable() *tview.Table {
 		}
 	}()
 
-	return d.table
+	return d.containearTable
 }

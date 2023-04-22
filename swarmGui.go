@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -49,51 +50,30 @@ func (d *DockerApi) SwarmTable() *tview.Table {
 
 func (d *DockerApi) GridSwarm() {
 
-	// newPrimitive := func(text string) tview.Primitive {
-	// 	return tview.NewTextView().
-	// 		SetTextAlign(tview.AlignCenter).
-	// 		SetText(text)
-	// }
 	d.swarmTable = d.SwarmTable()
 
-	// d.dropdown = tview.NewDropDown().
-	// 	SetLabel("Select an option: ").
-	// 	SetOptions([]string{"Restart", "Meta", "Logs", "Fourth", "Fifth"}, nil)
-	// textView := tview.NewTextView().SetLabel(fmt.Sprint(d.swarmTable.GetRowCount())).
-	// 	SetDynamicColors(true).
-	// 	SetRegions(true)
-	// go func() {
-	// 	for {
-	// 		time.Sleep(refreshInterval)
-	// 		textView.SetLabel(fmt.Sprint((d.swarmTable.GetRowCount() - 1)) + " Containers")
-	// 	}
-	// }()
-
-	d.text = tview.NewTextView().
+	textView := tview.NewTextView().SetLabel(fmt.Sprint(d.swarmTable.GetRowCount())).
 		SetDynamicColors(true).
-		SetRegions(true).
-		SetChangedFunc(func() {
-			d.app.Draw()
-		})
+		SetRegions(true)
+	go func() {
+		for {
+			time.Sleep(refreshInterval)
+			textView.SetLabel(fmt.Sprint((d.swarmTable.GetRowCount() - 1)) + " Services")
+		}
+	}()
 
-	// d.pagesTabel = tview.NewPages().
-	// 	AddPage("containerTablePage", d.swarmTable, true, true).
-	// 	AddPage("containerLogInfoPage", d.text, true, false)
-
-	// grid := tview.NewGrid().
-	// 	SetRows(1, -1).
-	// 	SetColumns(-1).
-	// 	SetBorders(true).
-	// 	AddItem(d.dropdown, 0, 1, 1, 4, 1, 2, false).
-	// 	AddItem(textView, 1, 1, 1, 4, 0, 2, false).
-	// 	AddItem(d.pagesTabel, 2, 1, 4, 4, 3, 4, false)
+	d.grid = tview.NewGrid().
+		SetRows(1, -1).
+		SetColumns(-1).
+		SetBorders(true).
+		AddItem(d.dropdown, 0, 1, 1, 4, 1, 2, false).
+		AddItem(textView, 1, 1, 1, 4, 0, 2, false).
+		AddItem(d.swarmTable, 2, 1, 4, 4, 3, 4, true)
 
 	d.gridSwarm = tview.NewGrid().
 		SetRows(1, -1).
 		SetColumns(-1).
 		SetBorders(true).
-		// AddItem(newPrimitive("F1"), 0, 0, 1, 1, 5, 10, false).
-		AddItem(d.swarmTable, 0, 0, 5, 1, 10, 10, false).
-		AddItem(d.text, 0, 0, 5, 1, 10, 10, true)
+		AddItem(d.grid, 0, 0, 5, 1, 10, 10, false)
 
 }
