@@ -49,10 +49,10 @@ func (d *DockerApi) GetImageListDocker() []ImageTag {
 	var image []ImageTag
 	for _, v := range res {
 
-		for x, y := range v.RepoDigests {
+		for _, y := range v.RepoDigests {
 			k := ImageTag{
 				RepoDigests: y,
-				RepoTags:    v.RepoTags[x],
+				RepoTags:   "",
 				Id:          v.ID,
 			}
 			image = append(image, k)

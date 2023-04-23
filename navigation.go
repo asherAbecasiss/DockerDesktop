@@ -17,6 +17,8 @@ func (d *DockerApi) MainNavigation() {
 	d.DropDownNavigation()
 	d.ImageListTableNavigation()
 	d.DropDownImageListNavigation()
+	d.DashboardNavigation()
+	// d.DashboardPsTableNavigation()
 
 	d.text.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 
@@ -38,10 +40,11 @@ func (d *DockerApi) MainNavigation() {
 			d.app.SetFocus(d.dropdown)
 
 		}
-		// if event.Key() == tcell.KeyF1 {
-		// 	d.app.SetFocus(d.list)
+		if event.Key() == tcell.KeyCtrlK {
+			d.app.Stop()
 
-		// }
+		}
+
 		// if event.Key() == tcell.KeyEscape {
 		// 	// d.pagesTabel.ShowPage("main1")
 		// 	d.lastFocus = d.app.GetFocus()
@@ -52,6 +55,62 @@ func (d *DockerApi) MainNavigation() {
 		return event
 	})
 
+}
+func (d *DockerApi) DashboardPsTableNavigation() {
+	d.grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+
+		if event.Key() == tcell.KeyESC {
+			d.flagForPs = 1
+			d.quit <- true
+			d.lastFocus = d.app.GetFocus()
+			d.app.SetFocus(d.lastFocus)
+			return nil
+		}
+
+		return event
+	})
+}
+
+func (d *DockerApi) DashboardNavigation() {
+	d.tableProcesses.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+
+		if event.Key() == tcell.KeyESC {
+			d.lastFocus = d.app.GetFocus()
+
+			if d.flagForPs == 0 {
+				d.quit <- true
+				d.flagForPs = 1
+			}
+			d.pagesMain.HidePage("dashboardPage")
+			// d.app.SetFocus(d.list)
+			return nil
+		}
+
+		if event.Key() == tcell.KeyF1 {
+
+			d.lastFocus = d.app.GetFocus()
+			d.app.SetFocus(d.tableProcesses)
+			if d.flagForPs == 1 {
+				d.flagForPs = 0
+				go d.GetPsGoFunc()
+			}
+
+			return nil
+		}
+		if event.Key() == tcell.KeyF2 {
+
+			if d.flagForPs == 0 {
+				d.quit <- true
+				d.flagForPs = 1
+			}
+			d.lastFocus = d.app.GetFocus()
+			d.app.SetFocus(d.tableProcesses)
+
+			return nil
+		}
+
+		return event
+	})
 }
 
 func (d *DockerApi) SwarmNavigation() {

@@ -13,15 +13,15 @@ import (
 )
 
 type DockerApi struct {
-	dockerClient *client.Client
-	app          *tview.Application
-	lastFocus    tview.Primitive
-	grid         *tview.Grid
-
-	gridMain        *tview.Grid
-	gridDocker      *tview.Grid
-	gridDockerImage *tview.Grid
-
+	dockerClient         *client.Client
+	app                  *tview.Application
+	lastFocus            tview.Primitive
+	grid                 *tview.Grid
+	tableProcesses       *tview.Table
+	gridMain             *tview.Grid
+	gridDocker           *tview.Grid
+	gridDockerImage      *tview.Grid
+	gridDashboard        *tview.Grid
 	gridSwarm            *tview.Grid
 	containearTable      *tview.Table
 	containearTableImage *tview.Table
@@ -32,10 +32,13 @@ type DockerApi struct {
 	pagesMain            *tview.Pages
 	text                 *tview.TextView
 
-	containerData []types.Container
-	swarmData     []swarm.Service
-	imageList     []ImageTag
-	filters       *int
+	containerData            []types.Container
+	swarmData                []swarm.Service
+	imageList                []ImageTag
+	filters                  *int
+	refreshIntervalProcesses *int
+	quit                     chan bool
+	flagForPs                int
 }
 
 const refreshInterval = 1 * time.Second
@@ -48,16 +51,37 @@ func GetApp() *tview.Application {
 
 }
 
-func (d *DockerApi) RunGui() {
-	d.app = GetApp()
-	d.initDropdown()
+func (d *DockerApi) InitOpt() {
 	d.filters = new(int)
 	*d.filters = 1
+
+	d.refreshIntervalProcesses = new(int)
+	*d.refreshIntervalProcesses = 1
+
+	d.quit = make(chan bool)
+
+	d.flagForPs = 0
+}
+
+func (d *DockerApi) RunGui() {
+	d.app = GetApp()
+	d.InitOpt()
+	d.initDropdown()
+	d.DashboardGrid()
+
 	d.DockerGrid()
 	d.DockerGridImage()
 	d.GridSwarm()
 
 	d.list = tview.NewList().
+		AddItem("Dashboard", "System Information", 'f', func() {
+			d.lastFocus = d.app.GetFocus()
+
+			d.pagesMain.ShowPage("dashboardPage")
+			d.app.SetFocus(d.tableProcesses)
+			// d.flagForPs = 1
+
+		}).
 		AddItem("Docker", "docker localhost", 'a', func() {
 			d.lastFocus = d.app.GetFocus()
 			d.pagesMain.ShowPage("dockerPage")
@@ -106,6 +130,7 @@ func (d *DockerApi) RunGui() {
 		AddPage("dockerPage", d.gridDocker, true, false).
 		AddPage("imageList", d.gridDockerImage, true, false).
 		AddPage("swarmPage", d.gridSwarm, true, false).
+		AddPage("dashboardPage", d.gridDashboard, true, false).
 
 		// AddPage("containerTablePage", d.table, true, false).
 		AddPage("containerLogInfoPage", tview.NewGrid().
