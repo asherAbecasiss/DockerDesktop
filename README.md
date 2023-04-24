@@ -1,4 +1,4 @@
-# DockerDesktopTerminal
+# Docker Desktop Terminal for Linux
 Docker/Swarm Desktop Terminal with system monitor
 
 ### run and build 
