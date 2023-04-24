@@ -13,25 +13,27 @@ import (
 )
 
 type DockerApi struct {
-	dockerClient         *client.Client
-	app                  *tview.Application
-	lastFocus            tview.Primitive
-	grid                 *tview.Grid
-	tableProcesses       *tview.Table
-	gridMain             *tview.Grid
-	gridDocker           *tview.Grid
-	gridDockerImage      *tview.Grid
-	gridDashboard        *tview.Grid
-	gridSwarm            *tview.Grid
-	containearTable      *tview.Table
-	containearTableImage *tview.Table
-	swarmTable           *tview.Table
-	dropdown             *tview.DropDown
-	dropdownImageList    *tview.DropDown
-	list                 *tview.List
-	pagesMain            *tview.Pages
-	text                 *tview.TextView
-
+	dockerClient             *client.Client
+	app                      *tview.Application
+	lastFocus                tview.Primitive
+	grid                     *tview.Grid
+	tableProcesses           *tview.Table
+	gridMain                 *tview.Grid
+	gridDocker               *tview.Grid
+	gridDockerImage          *tview.Grid
+	gridDashboard            *tview.Grid
+	gridSwarm                *tview.Grid
+	containearTable          *tview.Table
+	containearTableImage     *tview.Table
+	swarmTable               *tview.Table
+	dropdown                 *tview.DropDown
+	dropdownImageList        *tview.DropDown
+	dropdownPS               *tview.DropDown
+	list                     *tview.List
+	pagesMain                *tview.Pages
+	text                     *tview.TextView
+	memoryText               *tview.TextView
+	sensorsTemperaturesText  *tview.TextView
 	containerData            []types.Container
 	swarmData                []swarm.Service
 	imageList                []ImageTag
@@ -79,6 +81,7 @@ func (d *DockerApi) RunGui() {
 
 			d.pagesMain.ShowPage("dashboardPage")
 			d.app.SetFocus(d.tableProcesses)
+			d.tableProcesses.SetSelectable(true, false)
 			// d.flagForPs = 1
 
 		}).
@@ -167,6 +170,9 @@ func (d *DockerApi) initDropdown() {
 	d.dropdownImageList = tview.NewDropDown().
 		SetLabel("Select an option: ").
 		SetOptions([]string{"Delete"}, nil)
+	d.dropdownPS = tview.NewDropDown().
+		SetLabel("Select an option: ").
+		SetOptions([]string{"Kill"}, nil)
 	d.text = tview.NewTextView().
 		SetDynamicColors(true).
 		SetRegions(true).

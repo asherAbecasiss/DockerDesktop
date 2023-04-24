@@ -18,6 +18,8 @@ func (d *DockerApi) MainNavigation() {
 	d.ImageListTableNavigation()
 	d.DropDownImageListNavigation()
 	d.DashboardNavigation()
+	d.DropdownPSNavigation()
+	d.DashboardSensorsTemperaturesNavigation()
 	// d.DashboardPsTableNavigation()
 
 	d.text.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
@@ -56,6 +58,19 @@ func (d *DockerApi) MainNavigation() {
 	})
 
 }
+func (d *DockerApi) DashboardSensorsTemperaturesNavigation() {
+	d.sensorsTemperaturesText.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+
+		if event.Key() == tcell.KeyESC {
+			
+			d.lastFocus = d.app.GetFocus()
+			d.app.SetFocus(d.tableProcesses)
+			return nil
+		}
+
+		return event
+	})
+}
 func (d *DockerApi) DashboardPsTableNavigation() {
 	d.grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 
@@ -93,6 +108,7 @@ func (d *DockerApi) DashboardNavigation() {
 			if d.flagForPs == 1 {
 				d.flagForPs = 0
 				go d.GetPsGoFunc()
+
 			}
 
 			return nil
@@ -108,11 +124,61 @@ func (d *DockerApi) DashboardNavigation() {
 
 			return nil
 		}
+		if event.Key() == tcell.KeyF3 {
+			if d.flagForPs == 0 {
+				d.quit <- true
+				d.flagForPs = 1
+			}
+			d.lastFocus = d.app.GetFocus()
+			d.app.SetFocus(d.sensorsTemperaturesText)
+
+			return nil
+		}
+		if event.Key() == tcell.KeyEnter {
+			d.dropdownPS.SetCurrentOption(-1)
+			d.tableProcesses.SetSelectable(true, false)
+			d.lastFocus = d.app.GetFocus()
+			r, _ := d.tableProcesses.GetSelection()
+
+			d.app.SetFocus(d.dropdownPS)
+			d.dropdownPS.SetLabel(d.tableProcesses.GetCell(r, 0).Text)
+			return nil
+
+		}
 
 		return event
 	})
 }
+func (d *DockerApi) DropdownPSNavigation() {
+	d.dropdownPS.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 
+		if event.Key() == tcell.KeyEnter {
+
+			i, _ := d.dropdownPS.GetCurrentOption()
+			// r, _ := d.tableProcesses.GetSelection()
+			// d.lastFocus = d.app.GetFocus()
+			if i == 0 {
+
+				// d.RestartContainerID(d.containearTable.GetCell(r, 2).Text)
+
+				d.dropdownPS.SetLabel("Select an option: ")
+				d.dropdownPS.SetCurrentOption(-1)
+				d.app.SetFocus(d.lastFocus)
+
+				return nil
+			}
+		}
+
+		if event.Key() == tcell.KeyESC {
+			d.lastFocus = d.app.GetFocus()
+			d.dropdownPS.SetLabel("Select an option: ")
+			// d.pagesMain.SwitchToPage("mainPage")
+			d.app.SetFocus(d.tableProcesses)
+			return nil
+		}
+		return event
+	})
+}
 func (d *DockerApi) SwarmNavigation() {
 	d.swarmTable.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if event.Key() == tcell.KeyEnter {
