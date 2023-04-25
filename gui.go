@@ -29,6 +29,7 @@ type DockerApi struct {
 	dropdown                 *tview.DropDown
 	dropdownImageList        *tview.DropDown
 	dropdownPS               *tview.DropDown
+	errTxt                   *tview.TextView
 	list                     *tview.List
 	pagesMain                *tview.Pages
 	text                     *tview.TextView

@@ -26,6 +26,7 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	golang.org/x/mod v0.8.0 // indirect
 	golang.org/x/net v0.6.0 // indirect
+	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/term v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
@@ -35,10 +36,12 @@ require (
 )
 
 require (
+	github.com/Ullaakut/nmap/v3 v3.0.1
 	github.com/alecthomas/chroma v0.10.0
 	github.com/docker/docker v23.0.4+incompatible
 	github.com/gdamore/tcell v1.4.0
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/rivo/tview v0.0.0-20230406072732-e22ce9588bb4
 	github.com/shirou/gopsutil v3.21.11+incompatible
+	github.com/tj/go-spin v1.1.0
 )

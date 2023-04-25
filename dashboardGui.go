@@ -6,6 +6,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"github.com/tj/go-spin"
 )
 
 func (d *DockerApi) GetPsGoFunc() {
@@ -44,7 +45,7 @@ func (d *DockerApi) GetPsGoFunc() {
 				// d.memoryText.SetLabel(fmt.Sprint((d.tableProcesses.GetRowCount() - 1)) + " Processes\n")
 
 				memModel := ReadMemoryStats()
-				temprature := GetTemperatureStat()
+				// temprature := GetTemperatureStat()
 				disk := GetDiskServices("/")
 
 				d.memoryText.Clear()
@@ -72,9 +73,11 @@ func (d *DockerApi) GetPsGoFunc() {
 				fmt.Fprintf(d.memoryText, " [purple]Free Disk ["+colDisk+"] %f \n", float32(disk.Free)/1000000000)
 				fmt.Fprintf(d.memoryText, " [purple]Used Disk[white] ["+colDisk+"] %f \n", float32(disk.Used)/1000000000)
 
-				for _, v := range temprature {
-					fmt.Fprintf(d.sensorsTemperaturesText, " [yellow]Temperature[white] %s  %f\n", v.SensorKey, v.Temperature)
-				}
+				//d.sensorsTemperaturesText.Clear()
+				// for _, v := range temprature {
+				// 	fmt.Fprintf(d.sensorsTemperaturesText, " [yellow]Temperature[white] %s  %f\n", v.SensorKey, v.Temperature)
+				// }
+
 			})
 
 			time.Sleep(refreshInterval)
@@ -83,6 +86,25 @@ func (d *DockerApi) GetPsGoFunc() {
 	}
 }
 
+func NewSpinner(spinFrames string, intervalMilliseconds int64) chan string {
+	spinner := spin.New()
+	spinner.Set(spinFrames)
+
+	outChan := make(chan string)
+	go func() {
+		for {
+			select {
+			case <-outChan:
+				return
+			default:
+				time.Sleep(time.Duration(intervalMilliseconds) * time.Millisecond)
+				outChan <- spinner.Next()
+			}
+		}
+	}()
+
+	return outChan
+}
 func (d *DockerApi) TotalProcessesGui() {
 
 	d.tableProcesses = tview.NewTable()
@@ -93,18 +115,69 @@ func (d *DockerApi) TotalProcessesGui() {
 	d.sensorsTemperaturesText = tview.NewTextView().
 		SetDynamicColors(true).
 		SetRegions(true)
-	// d.tableProcesses.Clear()
+	d.sensorsTemperaturesText.SetText("lod")
+
 	go d.GetPsGoFunc()
+	spinnerChan := NewSpinner(spin.Spin1, 200)
+	ch := make(chan bool)
+	go func() {
+		for {
+			select {
+			case <-ch:
+				return
+			default:
+				d.app.QueueUpdateDraw(func() {
+					d.sensorsTemperaturesText.SetText(<-spinnerChan + " scanning the network, Please wait!")
+
+				})
+
+			}
+		}
+	}()
+	go func() {
+		// mask := net.IPMask(net.ParseIP("255.255.255.0").To4()) // If you have the mask as a string
+		// //mask := net.IPv4Mask(255,255,255,0) // If you have the mask as 4 integer values
+
+		// prefixSize, _ := mask.Size()
+
+		res, _ := Hosts()
+		concurrentMax := 100
+		pingChan := make(chan string, concurrentMax)
+		pongChan := make(chan Pong, len(res))
+		doneChan := make(chan []Pong)
+		for i := 0; i < concurrentMax; i++ {
+			go ping(pingChan, pongChan)
+		}
+		go receivePong(len(res), pongChan, doneChan)
+		for _, ip := range res {
+			pingChan <- ip
+			//  fmt.Println("sent: " + ip)
+		}
+
+		alives := <-doneChan
+		ch <- true
+		d.sensorsTemperaturesText.Clear()
+		fmt.Fprintf(d.sensorsTemperaturesText, "[lime]Network scanning Result[white]:\n")
+		for _, v := range alives {
+
+			fmt.Fprintf(d.sensorsTemperaturesText, "[yellow]Host[white] %s \n", v.Ip)
+
+		}
+	}()
 
 }
 
 func (d *DockerApi) DashboardGrid() {
 
 	d.TotalProcessesGui()
+	d.errTxt = tview.NewTextView().
+		SetDynamicColors(true).
+		SetRegions(true)
+
 	textView2 := tview.NewTextView().
 		SetDynamicColors(true).
 		SetRegions(true)
-	fmt.Fprintf(textView2, " [yellow]Processes Action[white] \n [green]Back[white]: ESC \n [green]F1[white]: Start Interval \n [green]F2[white]: Stop Interval")
+	fmt.Fprintf(textView2, " [yellow]Processes Action[white] \n [green]Back[white]: ESC \n [green]F1[white]: Start Interval \n [green]F2[white]: Stop Interval \n [green]F3[white]: Focus Net")
 
 	textIP := tview.NewTextView().
 		SetDynamicColors(true).
@@ -117,6 +190,11 @@ func (d *DockerApi) DashboardGrid() {
 	memText2 := tview.NewTextView().
 		SetDynamicColors(true).
 		SetRegions(true)
+	fmt.Fprintf(memText2, " [yellow]Network Interfaces[white]\n")
+	namp := Nmap()
+	for _, v := range namp.Interfaces {
+		fmt.Fprintf(memText2, " [lime]%s[white] %s\n", v.Device, v.IP)
+	}
 	// go func() {
 	// 	for {
 
@@ -156,7 +234,7 @@ func (d *DockerApi) DashboardGrid() {
 		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
 			// AddItem(d.memoryText, 3, 5, false).
 			AddItem(grid, 0, 5, false).
-			AddItem(tview.NewBox().SetBorder(true).SetTitle("Bottom (5 rows)"), 5, 1, false), 0, 2, false).
+			AddItem(d.errTxt, 5, 1, false), 0, 2, false).
 		AddItem(textView2, 20, 1, false)
 
 	d.gridDashboard = tview.NewGrid().

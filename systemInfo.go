@@ -2,20 +2,69 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net"
 	"os"
+	"os/exec"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/Ullaakut/nmap/v3"
 	"github.com/asher/goDocker/types"
 	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/process"
 )
+
+// func NmapScanTheNetworkForConnectedDevice(done chan error) {
+
+// 	// ip := GetLocalIP()
+// 	s, err := nmap.NewScanner(
+// 		context.Background(),
+
+// 		nmap.WithTargets("10.100.102.0/24"),
+// 		nmap.WithPorts("80,443,843"),
+// 	)
+// 	if err != nil {
+// 		log.Fatalf("unable to create nmap scanner: %v", err)
+// 	}
+// 	result, warnings, err := s.Async(done).Run()
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	if err := <-done; err != nil {
+// 		if len(*warnings) > 0 {
+// 			log.Printf("run finished with warnings: %s\n", *warnings) // Warnings are non-critical errors from nmap.
+// 		}
+// 		log.Fatal(err)
+// 	}
+
+// }
+
+func Nmap() *nmap.InterfaceList {
+	scanner, err := nmap.NewScanner(context.Background())
+	if err != nil {
+		log.Fatalf("unable to create nmap scanner: %v", err)
+	}
+
+	interfaceList, err := scanner.GetInterfaceList()
+	if err != nil {
+		log.Fatalf("could not get interface list: %v", err)
+	}
+
+	// bytes, err := json.MarshalIndent(interfaceList, "", "\t")
+	// if err != nil {
+	// 	log.Fatalf("unable to marshal: %v", err)
+	// }
+
+	return interfaceList
+
+}
 
 func GetDiskServices(path string) disk.UsageStat {
 	diskInfo, _ := disk.Usage(path)
@@ -139,7 +188,7 @@ func GetLocalIP() types.Ip {
 		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
 			if ipnet.IP.To4() != nil {
 
-				ip.LocalIp = ipnet.IP.String()
+				ip.LocalIp = ipnet.String()
 				return ip
 			}
 		}
@@ -186,4 +235,79 @@ func ReadMemoryStats() types.Memory {
 		}
 	}
 	return res
+}
+
+// func GetAlivesDevice() []Pong {
+
+// 	res, _ := Hosts("10.100.102.0/24")
+// 	concurrentMax := 100
+// 	pingChan := make(chan string, concurrentMax)
+// 	pongChan := make(chan Pong, len(res))
+// 	doneChan := make(chan []Pong)
+// 	for i := 0; i < concurrentMax; i++ {
+// 		go ping(pingChan, pongChan)
+// 	}
+// 	go receivePong(len(res), pongChan, doneChan)
+// 	for _, ip := range res {
+// 		pingChan <- ip
+// 		//  fmt.Println("sent: " + ip)
+// 	}
+
+// 	alives := <-doneChan
+
+// 	return alives
+
+// }
+
+func Hosts() ([]string, error) {
+	localIp := GetLocalIP()
+	ip, ipnet, err := net.ParseCIDR(localIp.LocalIp)
+	if err != nil {
+		return nil, err
+	}
+
+	var ips []string
+	for ip := ip.Mask(ipnet.Mask); ipnet.Contains(ip); inc(ip) {
+		ips = append(ips, ip.String())
+	}
+	// remove network address and broadcast address
+	return ips[1 : len(ips)-1], nil
+}
+func inc(ip net.IP) {
+	for j := len(ip) - 1; j >= 0; j-- {
+		ip[j]++
+		if ip[j] > 0 {
+			break
+		}
+	}
+}
+
+type Pong struct {
+	Ip    string
+	Alive bool
+}
+
+func ping(pingChan <-chan string, pongChan chan<- Pong) {
+	for ip := range pingChan {
+		_, err := exec.Command("ping", "-c1", "-t1", ip).Output()
+		var alive bool
+		if err != nil {
+			alive = false
+		} else {
+			alive = true
+		}
+		pongChan <- Pong{Ip: ip, Alive: alive}
+	}
+}
+
+func receivePong(pongNum int, pongChan <-chan Pong, doneChan chan<- []Pong) {
+	var alives []Pong
+	for i := 0; i < pongNum; i++ {
+		pong := <-pongChan
+		//  fmt.Println("received:", pong)
+		if pong.Alive {
+			alives = append(alives, pong)
+		}
+	}
+	doneChan <- alives
 }
