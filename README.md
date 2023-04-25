@@ -1,6 +1,9 @@
 # Docker Desktop Terminal for Linux
 Docker/Swarm Desktop Terminal with system monitor
-
+### Requirements nmap
+```
+$ sudo apt install nmap
+```
 ### run and build 
 ```
 $ make
