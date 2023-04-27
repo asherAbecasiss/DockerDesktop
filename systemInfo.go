@@ -21,30 +21,7 @@ import (
 	"github.com/shirou/gopsutil/process"
 )
 
-// func NmapScanTheNetworkForConnectedDevice(done chan error) {
 
-// 	// ip := GetLocalIP()
-// 	s, err := nmap.NewScanner(
-// 		context.Background(),
-
-// 		nmap.WithTargets("10.100.102.0/24"),
-// 		nmap.WithPorts("80,443,843"),
-// 	)
-// 	if err != nil {
-// 		log.Fatalf("unable to create nmap scanner: %v", err)
-// 	}
-// 	result, warnings, err := s.Async(done).Run()
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	if err := <-done; err != nil {
-// 		if len(*warnings) > 0 {
-// 			log.Printf("run finished with warnings: %s\n", *warnings) // Warnings are non-critical errors from nmap.
-// 		}
-// 		log.Fatal(err)
-// 	}
-
-// }
 
 func Nmap() *nmap.InterfaceList {
 	scanner, err := nmap.NewScanner(context.Background())

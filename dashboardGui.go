@@ -141,7 +141,7 @@ func (d *DockerApi) TotalProcessesGui() {
 		// prefixSize, _ := mask.Size()
 
 		res, _ := Hosts()
-		concurrentMax := 100
+		concurrentMax := 255
 		pingChan := make(chan string, concurrentMax)
 		pongChan := make(chan Pong, len(res))
 		doneChan := make(chan []Pong)

@@ -77,7 +77,7 @@ func (d *DockerApi) RunGui() {
 	d.GridSwarm()
 
 	d.list = tview.NewList().
-		AddItem("Dashboard", "System Information", 'f', func() {
+		AddItem("Dashboard", "System Information", 'a', func() {
 			d.lastFocus = d.app.GetFocus()
 
 			d.pagesMain.ShowPage("dashboardPage")
@@ -86,7 +86,7 @@ func (d *DockerApi) RunGui() {
 			// d.flagForPs = 1
 
 		}).
-		AddItem("Docker", "docker localhost", 'a', func() {
+		AddItem("Docker", "docker localhost", 'b', func() {
 			d.lastFocus = d.app.GetFocus()
 			d.pagesMain.ShowPage("dockerPage")
 			d.pagesMain.HidePage("Image")
@@ -94,7 +94,7 @@ func (d *DockerApi) RunGui() {
 			d.containearTable.SetSelectable(true, false)
 
 		}).
-		AddItem("Docker Images", "Image List", 'b', func() {
+		AddItem("Docker Images", "Image List", 'c', func() {
 			d.lastFocus = d.app.GetFocus()
 			d.pagesMain.ShowPage("imageList")
 			d.pagesMain.HidePage("Image")
@@ -102,20 +102,16 @@ func (d *DockerApi) RunGui() {
 			d.containearTableImage.SetSelectable(true, false)
 
 		}).
-		AddItem("Swarm", "Nodes info", 'c', func() {
+		AddItem("Swarm", "Nodes info", 'd', func() {
 			d.lastFocus = d.app.GetFocus()
 			d.pagesMain.ShowPage("swarmPage")
 			d.pagesMain.HidePage("Image")
 			d.app.SetFocus(d.swarmTable)
 			d.swarmTable.SetSelectable(true, false)
 
-		}).
-		AddItem("Services", "services Info", 'd', nil).
-		AddItem("RMM", "remote management", 'e', nil).
-		AddItem("Quit", "Press to exit", 'q', func() {
-			d.app.Stop()
-
 		})
+
+
 	d.gridMain = tview.NewGrid().
 		SetRows(1, -1).
 		SetColumns(-1).
@@ -142,18 +138,6 @@ func (d *DockerApi) RunGui() {
 			SetColumns(-1).
 			SetBorders(true).
 			AddItem(d.text, 0, 1, 4, 4, 10, 10, true), true, false)
-	// 	AddPage("Image", tview.NewGrid().
-	// 		SetRows(1, -1).
-	// 		SetColumns(-1).
-	// 		SetBorders(true).
-	// 		AddItem(image, 0, 1, 4, 4, 10, 10, true), true, false)
-	// d.pagesMain.ShowPage("Image")
-	// d.pagesMain.SetChangedFunc(func() {
-	// 	j, _ := d.pagesMain.GetFrontPage()
-	// 	if j == "mainPage" {
-	// 		d.pagesMain.ShowPage("Image")
-	// 	}
-	// })
 
 	d.MainNavigation()
 	if err := d.app.SetRoot(d.pagesMain, true).Run(); err != nil {
